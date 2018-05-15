@@ -15,6 +15,8 @@ defimpl HalIO, for: HalIO.TestLogger do
 
   def write(device, value) do
     Logger.debug("#{__MODULE__}:write:: #{inspect device} value: #{inspect value}")
+
+    :ok
   end
 
   def xfer(device, value) do
