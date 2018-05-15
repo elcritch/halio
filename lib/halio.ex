@@ -1,18 +1,8 @@
-defmodule Halio do
-  @moduledoc """
-  Documentation for Halio.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Halio.hello
-      :world
-
-  """
-  def hello do
-    :world
-  end
+defprotocol HalIO do
+  @doc "read data via a given bus"
+  def read(device)
+  @doc "write data via a given bus"
+  def write(device, value)
+  @doc "transfer data via a given bus"
+  def xfer(device, value)
 end
