@@ -3,13 +3,13 @@ defprotocol HalIO do
   @doc """
   Read data from a given IO hardware
   """
-  @spec read(struct, non_neg_integer) :: {:ok, binary} | {:error, term}
+  @spec read(struct, non_neg_integer) :: {:ok, bitstring} | {:error, term}
   def read(device, read_count)
 
   @doc """
   Write data via a given IO hardware
   """
-  @spec write(struct, binary) :: :ok | {:error, term}
+  @spec write(struct, bitstring) :: :ok | {:error, term}
   def write(device, value)
 
   @doc """
@@ -17,7 +17,7 @@ defprotocol HalIO do
 
   Note: for I2C usage, use read/write separately for custom read counts.
   """
-  @spec xfer(struct, binary) :: {:ok, binary} | {:error, term}
+  @spec xfer(struct, bitstring) :: {:ok, bitstring} | {:error, term}
   def xfer(device, value)
 end
 
