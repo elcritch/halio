@@ -45,7 +45,7 @@ defmodule HalIO.Device do
 
     @callback start_link(binary, [term], [term]) :: {:ok, pid}
 
-    def start_link(binary, i2c_opts, opts) do
+    def start_link(binary, i2c_opts, opts \\ []) do
       @i2c.start_link(binary, i2c_opts, opts)
     end
 

@@ -20,17 +20,20 @@ defmodule HalIO.Mock.I2C do
   end
 
   @impl true
-  def start_link(gpio_port, gpio_options, _opts) do
+  def start_link(i2c_port, i2c_options, _opts) do
     data =
       Map.new([state: 0])
-      |> Map.merge(Map.new(gpio_options))
+      |> Map.merge(Map.new(i2c_options))
 
     Agent.start_link(fn -> data end,
-      name: "#{__MODULE__}.#{gpio_port}" |> String.to_atom() )
+      name: "#{__MODULE__}.#{i2c_port}" |> String.to_atom() )
   end
 
-  def read(device, _read_count) do
-    {:ok, Agent.get(device, fn data -> data[:state] end)}
+  def read(device, read_count) do
+    result = Agent.get(device, fn data -> data[:state] end)
+
+    rem = String.slice(result, 0..read_count-1)
+    {:ok, rem }
   end
 
   def write(device, value) do
@@ -42,6 +45,7 @@ defmodule HalIO.Mock.I2C do
       {data.state, %{ data | state: value} }
     end)
 
-    {:ok, result}
+    rem = String.slice(result, 0..byte_size(value)-1)
+    {:ok, rem}
   end
 end

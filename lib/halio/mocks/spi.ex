@@ -20,18 +20,17 @@ defmodule HalIO.Mock.SPI do
   end
 
   @impl true
-  def start_link(gpio_port, gpio_options, _opts) do
+  def start_link(spi_port, spi_options, _opts) do
     data =
       Map.new([state: 0])
-      |> Map.merge(Map.new(gpio_options))
+      |> Map.merge(Map.new(spi_options))
 
     Agent.start_link(fn -> data end,
-      name: "#{__MODULE__}.#{gpio_port}" |> String.to_atom() )
+      name: "#{__MODULE__}.#{spi_port}" |> String.to_atom() )
   end
 
   def read(device, read_count) do
     result = Agent.get(device, fn data -> data[:state] end)
-    IO.puts "RESULT:: #{inspect result}, size:: #{inspect read_count}"
 
     rem = String.slice(result, 0..read_count-1)
     {:ok, rem }
