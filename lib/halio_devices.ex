@@ -16,7 +16,7 @@ defmodule HalIO.Device do
 
   defmodule SPI do
 
-    @spi Application.get_env(:halio, :spi_module)
+    @spi Application.get_env(:halio, :spi_module, HalIO.Mock.SPI)
 
     @callback start_link(binary, [term], [term]) :: {:ok, pid}
 
@@ -29,7 +29,7 @@ defmodule HalIO.Device do
 
   defmodule I2C do
 
-    @i2c Application.get_env(:halio, :i2c_module)
+    @i2c Application.get_env(:halio, :i2c_module, HalIO.Mock.I2C)
 
     @callback start_link(binary, [term], [term]) :: {:ok, pid}
 
