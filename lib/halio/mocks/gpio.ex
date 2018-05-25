@@ -1,41 +1,40 @@
+defmodule HalIO.Mock.GPIO do
+  require Logger
 
-defmodule HalIO.Devices do
+  @behaviour HalIO.Device.GPIO
 
-end
-
-defmodule HalIO.Device.GPIO do
-
-  @gpio Application.get_env(:halio, :gpio_module)
-
-  @callback start_link(binary, [term], [term]) :: {:ok, pid}
-
-  def start_link(binary, gpio_opts, opts) do
-    @gpio.start_link(binary, gpio_opts, opts)
+  @impl true
+  def start_link(gpio_port, gpio_options, _opts \\ []) do
+    Agent.start_link(fn -> Map.new(gpio_options) end,
+                      name: "#{__MODULE__}.#{gpio_port}")
   end
 
-end
+  def read(device, read_count) do
 
-defmodule HalIO.Device.SPI do
+    result = Agent.get(device, fn data -> data[:state] end)
 
-  @spi Application.get_env(:halio, :spi_module)
+    Logger.log(device.level, "#{__MODULE__}:read(#{inspect device}, #{inspect read_count}) :: #{inspect result} ")
 
-  @callback start_link(binary, [term], [term]) :: {:ok, pid}
-
-  def start_link(binary, spi_opts, opts) do
-    @spi.start_link(binary, spi_opts, opts)
+    result
   end
 
-end
+  def write(device, value) do
+    result = Agent.update(device, fn data -> %{ data | state: value } end)
+    :ok = result
 
+    Logger.log(device.level, "#{__MODULE__}:write(#{inspect device}, #{inspect value}) :: #{inspect result} ")
 
-defmodule HalIO.Device.I2C do
+    result
+  end
 
-  @i2c Application.get_env(:halio, :i2c_module)
+  def xfer(device, value) do
+    result = Agent.get_and_update(device, fn data ->
+      {data.state, %{ data | state: value} }
+    end)
 
-  @callback start_link(binary, [term], [term]) :: {:ok, pid}
+    Logger.log(device.level, "#{__MODULE__}:xfer(#{inspect device}, #{inspect value}) :: #{inspect result} ")
 
-  def start_link(binary, i2c_opts, opts) do
-    @i2c.start_link(binary, i2c_opts, opts)
+    result
   end
 
 end
