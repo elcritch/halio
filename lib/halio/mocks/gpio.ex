@@ -30,7 +30,7 @@ defmodule HalIO.Mock.GPIO do
   end
 
   def read(device, _read_count) do
-    Agent.get(device, fn data -> data[:state] end)
+    {:ok, Agent.get(device, fn data -> data[:state] end)}
   end
 
   def write(device, value) do
@@ -38,9 +38,10 @@ defmodule HalIO.Mock.GPIO do
   end
 
   def xfer(device, value) do
-    Agent.get_and_update(device, fn data ->
+    result = Agent.get_and_update(device, fn data ->
       {data.state, %{ data | state: value} }
     end)
-  end
 
+    {:ok, result}
+  end
 end

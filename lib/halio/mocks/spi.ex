@@ -5,18 +5,36 @@ defmodule HalIO.Mock.SPI do
 
   @impl true
   def hal(pid, opts) do
-    log_level = Keyword.get(opts, :log_level)
-    %HalIO.LoggerWrapper{parent: pid, level: log_level}
+    log_level = Keyword.get(opts, :log_level, :nil)
+
+    halio = %HalIO.Mock.GenericProxy{module: __MODULE__, pid: pid}
+
+    halio =
+      if log_level do
+        %HalIO.LoggerWrapper{parent: halio, level: log_level}
+      else
+        halio
+      end
+
+    halio
   end
 
   @impl true
   def start_link(gpio_port, gpio_options, _opts) do
-    Agent.start_link(fn -> Map.new(gpio_options) end,
+    data =
+      Map.new([state: 0])
+      |> Map.merge(Map.new(gpio_options))
+
+    Agent.start_link(fn -> data end,
       name: "#{__MODULE__}.#{gpio_port}" |> String.to_atom() )
   end
 
-  def read(device, _read_count) do
-    Agent.get(device, fn data -> data[:state] end)
+  def read(device, read_count) do
+    result = Agent.get(device, fn data -> data[:state] end)
+    IO.puts "RESULT:: #{inspect result}, size:: #{inspect read_count}"
+
+    rem = String.slice(result, 0..read_count-1)
+    {:ok, rem }
   end
 
   def write(device, value) do
@@ -24,9 +42,11 @@ defmodule HalIO.Mock.SPI do
   end
 
   def xfer(device, value) do
-    Agent.get_and_update(device, fn data ->
+    result = Agent.get_and_update(device, fn data ->
       {data.state, %{ data | state: value} }
     end)
-  end
 
+    rem = String.slice(result, 0..byte_size(value)-1)
+    {:ok, rem}
+  end
 end
