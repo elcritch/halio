@@ -1,27 +1,39 @@
 
 defmodule HalIO.TestLogger do
+  require Logger
+  use GenServer
+  use HalIO.ByteInterface
+
   @enforce_keys [:default_value]
   defstruct [:name, :default_value, :options]
-end
 
-defimpl HalIO, for: HalIO.TestLogger do
-  require Logger
-
-  def read(device, _read_count) do
-    Logger.debug("#{__MODULE__}:read:: #{inspect device} ")
-
-    {:ok, device.default_value}
+  @impl true
+  def start_link(devname, spi_opts \\ [], opts \\ []) do
+    GenServer.start_link(__MODULE__, {devname, spi_opts}, opts)
   end
 
-  def write(device, value) do
-    Logger.debug("#{__MODULE__}:write:: #{inspect device} value: #{inspect value}")
-    :ok
+  @impl GenServer
+  def init(args) do
+    {:ok, args}
   end
 
-  def xfer(device, value) do
-    Logger.debug("#{__MODULE__}:xfer:: #{inspect device} value: #{inspect value}")
+  @impl true
+  def handle_call({:read, count}, _from, state) do
+    Logger.debug("#{__MODULE__}:read(#{inspect count}):: #{inspect state} ")
+    {:reply, state.default_value, state}
+  end
 
-    {:ok, device.default_value}
+  @impl true
+  def handle_call({:write, data}, _from, state) do
+    Logger.debug("#{__MODULE__}:write:: #{inspect state} value: #{inspect data}")
+    {:reply, :ok, state}
+  end
+
+  @impl true
+  def handle_call({:xfer, data}, _from, state) do
+    Logger.debug("#{__MODULE__}:xfer:: #{inspect state} value: #{inspect data}")
+
+    {:reply, state.default_value, state}
   end
 end
 

@@ -1,20 +1,36 @@
 defmodule HalIO.Mock.GenericProxy do
   defstruct [:pid, :module]
-end
 
-defimpl HalIO, for: HalIO.Mock.GenericProxy  do
   require Logger
+  use HalIO.ByteInterface
+  use GenServer
 
-  def read(proxy, read_count) do
-    apply(proxy.module, :read, [proxy.pid, read_count])
+  @impl true
+  def start_link(devname, spi_opts \\ [], opts \\ []) do
+    GenServer.start_link(__MODULE__, {devname, spi_opts}, opts)
   end
 
-  def write(proxy, value) do
-    apply(proxy.module, :write, [proxy.pid, value])
+  @impl true
+  def init(args) do
+    {:ok, args}
   end
 
-  def xfer(proxy, value) do
-    apply(proxy.module, :xfer, [proxy.pid, value])
+  @impl true
+  def handle_call({:read, count}, _from, proxy) do
+    result = apply(proxy.module, :read, [proxy.pid, count])
+    {:reply, result, proxy}
+  end
+
+  @impl true
+  def handle_call({:write, data}, _from, proxy) do
+    result = apply(proxy.module, :write, [proxy.pid, data])
+    {:reply, result, proxy}
+  end
+
+  @impl true
+  def handle_call({:xfer, data}, _from, proxy) do
+    result = apply(proxy.module, :xfer, [proxy.pid, data])
+    {:reply, result, proxy}
   end
 
 end

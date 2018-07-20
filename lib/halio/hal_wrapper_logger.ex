@@ -2,30 +2,41 @@
 defmodule HalIO.LoggerWrapper do
   @enforce_keys [:parent, :level]
   defstruct [:name, :parent, :level, :options]
-end
 
-defimpl HalIO, for: HalIO.LoggerWrapper  do
   require Logger
+  use HalIO.ByteInterface
+  use GenServer
 
-  def read(device, read_count) do
-    result = HalIO.read(device.parent, read_count)
-    Logger.log(device.level, "#{__MODULE__}:read(#{inspect device}, #{inspect read_count}) :: #{inspect result} ")
-
-    result
+  @impl true
+  def start_link(devname, spi_opts \\ [], opts \\ []) do
+    GenServer.start_link(__MODULE__, {devname, spi_opts}, opts)
   end
 
-  def write(device, value) do
-    result = HalIO.write(device.parent, value)
-    Logger.log(device.level, "#{__MODULE__}:write(#{inspect device}, #{inspect value}) :: #{inspect result} ")
-
-    result
+  @impl true
+  def init(args) do
+    {:ok, args}
   end
 
-  def xfer(device, value) do
-    result = HalIO.xfer(device.parent, value)
-    Logger.log(device.level, "#{__MODULE__}:xfer(#{inspect device}, #{inspect value}) :: #{inspect result} ")
+  @impl true
+  def handle_call({:read, count}, _from, device) do
+    result = HalIO.read(device.parent, count)
+    Logger.log(device.level, "#{__MODULE__}:read(#{inspect device}, #{inspect count}) :: #{inspect result} ")
+    {:reply, result, device}
+  end
 
-    result
+  @impl true
+  def handle_call({:write, data}, _from, device) do
+    result = HalIO.write(device.parent, data)
+    Logger.log(device.level, "#{__MODULE__}:write(#{inspect device}, #{inspect data}) :: #{inspect result} ")
+    {:reply, result, device}
+  end
+
+  @impl true
+  def handle_call({:xfer, data}, _from, device) do
+    result = HalIO.xfer(device.parent, data)
+    Logger.log(device.level, "#{__MODULE__}:xfer(#{inspect device}, #{inspect data}) :: #{inspect result} ")
+
+    {:reply, result, device}
   end
 end
 
